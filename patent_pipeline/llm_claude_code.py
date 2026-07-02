@@ -13,6 +13,7 @@ import json
 import re
 import shutil
 import subprocess
+import time
 from typing import Any
 
 from .cache import Cache
@@ -85,23 +86,29 @@ class ClaudeCodeLLM:
         self.timeout = timeout
 
     # ---- 내부 호출 ----
-    def _invoke(self, prompt: str) -> str:
+    def _invoke(self, prompt: str, retries: int = 1) -> str:
         args = [self.command, "-p", "--output-format", "text"]
         if self.model:
             args += ["--model", self.model]
-        try:
-            proc = subprocess.run(
-                args,
-                input=prompt.encode("utf-8"),
-                capture_output=True,
-                timeout=self.timeout,
-            )
-        except subprocess.TimeoutExpired as exc:
-            raise ClaudeCodeError(f"claude CLI 응답 시간 초과({self.timeout}s)") from exc
-        if proc.returncode != 0:
-            err = proc.stderr.decode("utf-8", errors="replace")
-            raise ClaudeCodeError(f"claude CLI 실패(code {proc.returncode}): {err.strip()[:500]}")
-        return proc.stdout.decode("utf-8", errors="replace").strip()
+        last_err = ""
+        for attempt in range(retries + 1):
+            try:
+                proc = subprocess.run(
+                    args,
+                    input=prompt.encode("utf-8"),
+                    capture_output=True,
+                    timeout=self.timeout,
+                )
+            except subprocess.TimeoutExpired as exc:
+                raise ClaudeCodeError(f"claude CLI 응답 시간 초과({self.timeout}s)") from exc
+            if proc.returncode == 0:
+                return proc.stdout.decode("utf-8", errors="replace").strip()
+            last_err = proc.stdout.decode("utf-8", errors="replace").strip() or proc.stderr.decode(
+                "utf-8", errors="replace"
+            ).strip()
+            if attempt < retries:
+                time.sleep(3)
+        raise ClaudeCodeError(f"claude CLI 실패(code {proc.returncode}): {last_err[:500]}")
 
     # ---- LLM 인터페이스 ----
     def complete(

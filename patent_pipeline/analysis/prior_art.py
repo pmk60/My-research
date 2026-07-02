@@ -47,25 +47,35 @@ def _idea_brief(idea: Idea) -> str:
     )
 
 
+SCREEN_BATCH_SIZE = 40  # 프롬프트 크기를 안정적인 범위로 유지하기 위한 배치 단위
+
+
 def screen_prior_art(llm: LLM, idea: Idea, arts: list[PriorArt], top_n: int) -> list[PriorArt]:
-    """명칭/초록 기준으로 관련도 점수를 매겨 상위 N건을 고른다."""
+    """명칭/초록 기준으로 관련도 점수를 매겨 상위 N건을 고른다.
+
+    선행문헌이 많을 때 한 번의 LLM 호출에 전부 담으면 프롬프트가 비대해져
+    시간초과·실패 위험이 커지므로, SCREEN_BATCH_SIZE 단위로 나눠 채점한다.
+    """
     if not arts:
         return []
 
-    listing = "\n".join(
-        f"[{i}] {a.title}\n    초록: {(a.abstract or '(없음)')[:400]}"
-        for i, a in enumerate(arts)
-    )
-    user = (
-        f"# 발명 아이디어\n{_idea_brief(idea)}\n\n"
-        f"# 선행문헌 목록 ({len(arts)}건)\n{listing}\n\n"
-        "각 문헌의 index 와 score(0~100), 한 줄 reason 을 매겨 주세요."
-    )
-    data = llm.complete_json(SCREEN_SYSTEM, user, SCREEN_SCHEMA, max_tokens=8000)
-    for entry in data.get("scores", []):
-        idx = entry.get("index")
-        if isinstance(idx, int) and 0 <= idx < len(arts):
-            arts[idx].score = float(entry.get("score", 0))
+    for start in range(0, len(arts), SCREEN_BATCH_SIZE):
+        batch = arts[start : start + SCREEN_BATCH_SIZE]
+        listing = "\n".join(
+            f"[{i}] {a.title}\n    초록: {(a.abstract or '(없음)')[:400]}"
+            for i, a in enumerate(batch)
+        )
+        user = (
+            f"# 발명 아이디어\n{_idea_brief(idea)}\n\n"
+            f"# 선행문헌 목록 ({len(batch)}건)\n{listing}\n\n"
+            "각 문헌의 index 와 score(0~100), 한 줄 reason 을 매겨 주세요."
+        )
+        data = llm.complete_json(SCREEN_SYSTEM, user, SCREEN_SCHEMA, max_tokens=8000)
+        for entry in data.get("scores", []):
+            idx = entry.get("index")
+            if isinstance(idx, int) and 0 <= idx < len(batch):
+                batch[idx].score = float(entry.get("score", 0))
+
     ranked = sorted(arts, key=lambda a: a.score, reverse=True)
     return ranked[:top_n]
 
