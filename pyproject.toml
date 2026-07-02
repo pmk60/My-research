@@ -1,0 +1,27 @@
+[project]
+name = "rpaper"
+version = "0.1.0"
+description = "연구 논문 작성 자동화 파이프라인: 문헌 수집 -> Obsidian 위키 -> 통계분석/R figure -> 원고 작성"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    # 표준 라이브러리만으로도 PubMed 수집/Obsidian 출력은 동작합니다.
+    # 아래는 선택적 기능(LLM 요약, YAML 설정 등)에 필요합니다.
+    "pyyaml>=6.0",
+    "requests>=2.31",
+    "anthropic>=0.40",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+rpaper = "rpaper.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+# r/(R 템플릿) 등 비파이썬 디렉터리가 패키지로 오인되지 않도록 rpaper 만 포함
+include = ["rpaper*"]

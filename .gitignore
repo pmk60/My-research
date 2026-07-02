@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.env
+
+# 설정(키 포함 — 커밋 금지)
+config.yaml
+config.local.yaml
+patent_config.yaml
+
+# rpaper 산출물
+vault/
+analysis_out/
+*.rds
+
+# patent_pipeline 산출물
+.cache/
+output/
+*.log
+
+# OS
+.DS_Store
+
+# Claude Code 런타임 상태
+.claude/scheduled_tasks.lock

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>rpaper — 연구 논문 작성 자동화 파이프라인</title>
+<style>
+  :root{--bg:#0f1115;--card:#181b22;--line:#2a2f3a;--fg:#e6e9ef;--mut:#9aa3b2;
+    --ok:#3fb950;--wip:#d29922;--no:#f85149;--acc:#58a6ff;--acc2:#bc8cff;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+    line-height:1.6;padding:0 16px 80px}
+  .wrap{max-width:980px;margin:0 auto}
+  header{padding:48px 0 28px;border-bottom:1px solid var(--line);margin-bottom:32px}
+  h1{font-size:30px;margin:0 0 8px;letter-spacing:-.5px}
+  h1 .v{color:var(--acc);font-size:15px;font-weight:500;margin-left:8px}
+  .sub{color:var(--mut);font-size:16px;margin:0}
+  h2{font-size:20px;margin:42px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .stat .n{font-size:26px;font-weight:700;color:var(--acc)}
+  .stat .l{color:var(--mut);font-size:13px}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:18px 0}
+  .step{flex:1;min-width:120px;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;padding:14px;position:relative}
+  .step .num{color:var(--acc2);font-weight:700;font-size:12px;letter-spacing:1px}
+  .step .t{font-weight:600;margin:4px 0 6px;font-size:14px}
+  .step .d{color:var(--mut);font-size:12.5px}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:8px}
+  .b-ok{background:rgba(63,185,80,.15);color:var(--ok)}
+  .b-wip{background:rgba(210,153,34,.15);color:var(--wip)}
+  .b-no{background:rgba(248,81,73,.15);color:var(--no)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.5px}
+  code{background:#0c0e12;border:1px solid var(--line);border-radius:6px;padding:1px 6px;
+    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;color:#e3b341}
+  pre{background:#0c0e12;border:1px solid var(--line);border-radius:12px;padding:18px;
+    overflow:auto;font-size:13px;line-height:1.55}
+  pre code{background:none;border:none;padding:0;color:#c9d1d9}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0}
+  .chk li{margin:8px 0}
+  .tag{font-size:11px;color:var(--mut)}
+  ul{padding-left:20px} li{margin:5px 0}
+  .tree{color:#8b949e}
+  .tree b{color:var(--acc)}
+  footer{margin-top:50px;color:var(--mut);font-size:13px;border-top:1px solid var(--line);padding-top:20px}
+  .ok{color:var(--ok)}.wip{color:var(--wip)}.no{color:var(--no)}
+</style>
+</head>
+<body><div class="wrap">
+
+<header>
+  <h1>rpaper <span class="v">v0.1 · 동작하는 골격(MVP)</span></h1>
+  <p class="sub">제목·아이템 → 문헌/뉴스 수집 → Obsidian 위키 → R 통계·Figure → 원고 작성까지 단계별 파이프라인</p>
+</header>
+
+<div class="grid">
+  <div class="stat"><div class="n">7</div><div class="l">CLI 명령</div></div>
+  <div class="stat"><div class="n">~1,170</div><div class="l">Python 라인</div></div>
+  <div class="stat"><div class="n">10</div><div class="l">통과한 테스트</div></div>
+  <div class="stat"><div class="n">5</div><div class="l">파이프라인 단계</div></div>
+</div>
+
+<h2>① 전체 파이프라인</h2>
+<div class="flow">
+  <div class="step"><div class="num">STEP 1</div><div class="t">수집</div>
+    <div class="d">PubMed·Scholar·뉴스 검색</div><span class="badge b-ok">동작</span></div>
+  <div class="step"><div class="num">STEP 2</div><div class="t">Obsidian 위키</div>
+    <div class="d">번호별 요약·인용·BibTeX</div><span class="badge b-ok">동작</span></div>
+  <div class="step"><div class="num">STEP 3</div><div class="t">통계분석</div>
+    <div class="d">R t-test/ANOVA·유의성</div><span class="badge b-ok">동작</span></div>
+  <div class="step"><div class="num">STEP 4</div><div class="t">Figure</div>
+    <div class="d">R ggplot2·유의성 표기</div><span class="badge b-ok">R 필요</span></div>
+  <div class="step"><div class="num">STEP 5</div><div class="t">원고 작성</div>
+    <div class="d">Intro→M&M→Results→Disc</div><span class="badge b-ok">동작</span></div>
+</div>
+
+<h2>② 구성 요소별 상태</h2>
+<table>
+  <tr><th>단계 / 명령</th><th>모듈</th><th>상태</th></tr>
+  <tr><td>문헌 수집 — PubMed <code>collect</code></td><td>collectors/pubmed.py</td><td><span class="ok">✅ 동작</span> (NCBI E-utilities)</td></tr>
+  <tr><td>문헌 수집 — Scholar</td><td>collectors/scholar.py</td><td><span class="wip">⚙️ SerpAPI 키 필요</span></td></tr>
+  <tr><td>해외 뉴스</td><td>collectors/news.py</td><td><span class="wip">⚙️ NewsAPI 키 필요</span></td></tr>
+  <tr><td>Obsidian 위키 + 번호별 요약</td><td>knowledge/obsidian.py</td><td><span class="ok">✅ 기존 vault 연동·충돌없음</span></td></tr>
+  <tr><td>BibTeX 내보내기</td><td>knowledge/citations.py</td><td><span class="ok">✅ 동작</span></td></tr>
+  <tr><td>요약 / 원고 LLM</td><td>integrations/llm.py</td><td><span class="wip">⚙️ Anthropic 키 입력 시 고품질</span></td></tr>
+  <tr><td>통계분석 <code>analyze</code></td><td>analysis/stats.py</td><td><span class="ok">✅ R 우선·파이썬 폴백</span></td></tr>
+  <tr><td>Figure <code>figure</code></td><td>analysis/figures.py</td><td><span class="ok">✅ R(ggplot2) 필요</span></td></tr>
+  <tr><td>figurelabs 연동</td><td>integrations/figurelabs.py</td><td><span class="no">❌ API 사양 확인 필요(스텁)</span></td></tr>
+  <tr><td>원고 5개 섹션 <code>write</code></td><td>manuscript/sections.py</td><td><span class="ok">✅ Results=통계·그림 자동반영</span></td></tr>
+  <tr><td>저널 템플릿/가이드라인 <code>journal</code></td><td>manuscript/journal.py</td><td><span class="wip">⚙️ URL 입력 시 다운로드</span></td></tr>
+</table>
+
+<h2>③ Obsidian 연동 방식 (당신 질문)</h2>
+<div class="card">
+  <p><b>네, 기존 vault에 그대로 연동됩니다.</b> <code>obsidian_vault</code>에 기존 vault 루트만 지정하면,
+  그 안에 <b>프로젝트 전용 폴더</b>를 만들어 모읍니다. 기존 노트는 건드리지 않습니다(테스트로 검증).</p>
+  <pre class="tree"><code>내_기존_Vault/
+├─ Daily.md                  <span class="ok">← 기존 노트 그대로 보존</span>
+└─ <b>Effect-of-compound-X.../</b>   ← rpaper 가 만든 프로젝트 폴더
+   ├─ 00-Index.md            (프로젝트 허브 MOC)
+   ├─ Bibliography.md        (번호순 전체 인용)
+   ├─ References/Ref-001.md  (요약·abstract·Vancouver 인용·^ref-001)
+   ├─ News/...
+   ├─ Manuscript/Introduction.md, Results.md ...
+   └─ .rpaper/               (캐시·references.bib)</code></pre>
+  <p class="tag">인용 링크는 <code>[[폴더/References/Ref-001|1]]</code>처럼 경로까지 명시 → 다른 프로젝트와 노트명이 겹쳐도 모호하지 않음. 모바일/PC 어느 동기화에서도 동일하게 열림.</p>
+</div>
+
+<h2>④ 사용법</h2>
+<pre><code>pip install -e .
+cp config.example.yaml config.yaml   # 키/경로 입력
+rpaper collect          # 수집 → Obsidian 위키 + BibTeX
+rpaper analyze data.csv group value  # 통계(유의성)
+rpaper figure  data.csv group value  # R figure
+rpaper write intro      # intro|methods|results|discussion
+rpaper journal          # 저널 템플릿+가이드라인
+rpaper status           # 진행률·키 설정 한눈에
+rpaper run              # collect + intro/methods 일괄</code></pre>
+
+<h2>⑤ 🗓️ 화요일 아침 — 당신이 추가할 것만</h2>
+<div class="card"><ul class="chk">
+  <li><b>config.yaml</b> 작성: <code>obsidian_vault</code>(기존 vault 경로), <code>title</code>/<code>keywords</code></li>
+  <li><b>Anthropic API 키</b> (<code>ANTHROPIC_API_KEY</code>) — 요약·원고 품질의 핵심</li>
+  <li>(선택) <b>SerpAPI</b>(Scholar) / <b>NewsAPI</b>(뉴스) / <b>NCBI</b> 키</li>
+  <li>(선택) <code>bash scripts/setup.sh</code> 로 <b>R + ggplot2</b> 설치 — figure·정확 p값</li>
+  <li>당신만 줄 수 있는 것: <b>raw data CSV</b>, <b>저널 template/guideline URL</b>, <b>figurelabs API 문서</b></li>
+</ul></div>
+
+<h2>⑥ 외부 확인이 필요한 항목</h2>
+<table>
+  <tr><th>항목</th><th>이유</th><th>당장의 대안</th></tr>
+  <tr><td><span class="no">figurelabs 연동</span></td><td>공개 API/MCP·인증 방식 미확인. 이메일만으론 프로그램 연동 불가</td><td>R(ggplot2) 로컬 figure (논문 품질 충분)</td></tr>
+  <tr><td><span class="wip">Google Scholar</span></td><td>공식 API 없음, 직접 스크래핑은 약관 위반·차단</td><td>SerpAPI(유료) google_scholar 엔진</td></tr>
+  <tr><td><span class="wip">이 클라우드 세션 네트워크</span></td><td>정책상 외부(NCBI) 접근 403</td><td>본인 PC/모바일/허용 환경에서 정상</td></tr>
+</table>
+
+<footer>
+  rpaper · 모바일·PC·Antigravity IDE 공통 (순수 Python CLI + Obsidian 마크다운 vault)<br>
+  자세한 현황은 <code>docs/STATUS.md</code> 참고.
+</footer>
+
+</div></body></html>

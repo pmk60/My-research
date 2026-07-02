@@ -1,0 +1,54 @@
+# 특허 작성 파이프라인 설정 예시
+# 이 파일을 patent_config.yaml 로 복사한 뒤 값을 채우세요. (patent_config.yaml 은 .gitignore 처리됨)
+# ※ rpaper 의 config.yaml 과는 별개 파일입니다.
+# 모든 값은 환경변수로도 설정 가능합니다. 환경변수가 우선합니다.
+
+# === API 키 ===
+# KIPRIS Plus 서비스키 (https://plus.kipris.or.kr 에서 발급)
+# 환경변수: KIPRIS_SERVICE_KEY
+kipris_service_key: ""
+
+# Anthropic API 키 (https://console.anthropic.com)
+# 환경변수: ANTHROPIC_API_KEY
+anthropic_api_key: ""
+
+# === LLM 설정 ===
+# LLM 백엔드: auto | api | claude-code
+#  - auto (기본): ANTHROPIC_API_KEY 있으면 api, 없으면 claude-code 자동 선택
+#  - claude-code: Claude Code CLI 사용. Claude Pro/Max 구독이면 "추가 과금 없음".
+#                 (claude.com/claude-code 설치 후 로그인만 하면 됨 — API 키 불필요)
+#  - api: Anthropic 유료 API 키 사용
+llm_backend: "auto"
+# claude-code 백엔드에서 쓸 모델 별칭(예: opus, sonnet). 비우면 CLI 기본값.
+claude_code_model: ""
+
+# (api 백엔드 전용) 분석/작성에 사용할 Claude 모델
+model: "claude-opus-4-8"
+# (api 백엔드 전용) 사고(reasoning) 강도: low | medium | high | max
+effort: "high"
+
+# === 검색 설정 ===
+search:
+  # 1차 검색에서 가져올 최대 선행문헌 수
+  max_results: 30
+  # 정밀 분석(LLM 비교)을 수행할 상위 문헌 수
+  analyze_top_n: 12
+  # KIPRIS 동시 요청 수
+  concurrency: 6
+  # 학술 논문(OpenAlex) 선행조사 사용 여부 — 무료, 키 불필요
+  use_literature: true
+  # 가져올 논문 수
+  literature_max_results: 10
+  # OpenAlex polite pool 용 연락 이메일(선택). 비워도 동작합니다.
+  literature_mailto: ""
+
+# === Obsidian 연동 ===
+obsidian:
+  # Obsidian 보관소(vault) 경로. 비워두면 ./output/vault 사용
+  vault_path: ""
+  # 특허 노트를 모아둘 폴더명
+  folder: "Patents"
+
+# === 캐시 ===
+# KIPRIS / LLM 응답 캐시 디렉터리 (재실행 시 속도 향상)
+cache_dir: ".cache"

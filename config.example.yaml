@@ -1,0 +1,63 @@
+# rpaper 설정 예시 — 복사해서 config.yaml 로 사용하세요 (config.yaml 은 .gitignore 됨)
+# 환경변수로도 덮어쓸 수 있습니다 (예: RPAPER_NCBI_API_KEY).
+
+project:
+  title: "예: Effect of X on Y in Z model"
+  # 검색 키워드(아이템). 비우면 title 에서 자동 추출 시도.
+  keywords: ["keyword1", "keyword2"]
+  # 기존 Obsidian vault 의 "루트" 경로를 그대로 지정하세요.
+  # (예: macOS "~/Documents/MyVault", iCloud/Obsidian Sync 동기화 폴더)
+  obsidian_vault: "./vault"
+  # vault 안에서 이 프로젝트가 들어갈 하위 폴더명. 비우면 title 로 자동 생성.
+  # 기존 노트와 섞이지 않도록 항상 전용 폴더 아래에 모읍니다.
+  folder: ""
+
+# --- 문헌 수집 ---
+pubmed:
+  # NCBI API 키(선택). 없으면 초당 3요청, 있으면 10요청.
+  # https://www.ncbi.nlm.nih.gov/account/settings/ 에서 발급.
+  api_key: ""
+  email: "pmk601313@knu.ac.kr"   # E-utilities 예의상 식별용
+  max_results: 40
+
+# Google Scholar 는 공식 API 가 없고 자동수집을 약관상 금지합니다.
+# 합법적 대안으로 SerpAPI(유료) 의 google_scholar 엔진을 권장합니다.
+scholar:
+  provider: "serpapi"   # serpapi | none
+  serpapi_key: ""
+  max_results: 20
+
+news:
+  # 해외 뉴스 수집. NewsAPI(유료) 또는 내장 웹검색 사용.
+  provider: "newsapi"   # newsapi | websearch | none
+  newsapi_key: ""
+  language: "en"
+  max_results: 30
+
+# --- 요약/원고 작성용 LLM ---
+llm:
+  provider: "anthropic"
+  api_key: ""           # ANTHROPIC_API_KEY 환경변수 권장
+  model: "claude-fable-5"
+
+# --- 통계 / Figure ---
+# 모든 그래프/figure 는 R(ggplot2) 로 그리는 것을 "기본"으로 합니다.
+analysis:
+  # R 실행 경로. 모든 도표/그래프는 이 R 로 생성됩니다(figure 기본 엔진).
+  rscript_path: "Rscript"
+  alpha: 0.05
+
+# figurelabs 는 보조 옵션이며 기본 비활성. R 로 만든 figure 를 외부 업로드할 때만 사용.
+# 기본 figure 생성은 항상 R 입니다.
+figurelabs:
+  enabled: false        # 기본 꺼짐. API 사양 확인 후에만 활성화
+  account: "pmk601313@knu.ac.kr"
+  api_key: ""
+  base_url: ""          # figurelabs 가 REST API 를 제공할 경우 입력
+
+# --- 저널 원고 ---
+journal:
+  # 저널을 정할 때마다 채웁니다. 템플릿/가이드라인 URL.
+  name: ""
+  template_url: ""
+  guidelines_url: ""
