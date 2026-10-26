@@ -14,7 +14,7 @@
    `rpaper write results` → `rpaper write discussion` → `rpaper status` 로 확인
 
 > 위 키들 외에 **당신이 직접 줘야 하는 것**: ① raw data CSV ② 저널 정할 때 template/guideline URL
-> ③ figurelabs API 문서/키(있다면) — 이건 외부 사양이라 제가 임의로 못 만듭니다.
+> ③ figurelabs API **키**(발급 후 `FIGURELABS_API_KEY` 환경변수 또는 config.yaml 에 입력)
 
 
 
@@ -56,13 +56,39 @@
 - **저널 템플릿/가이드라인**: `config.journal.template_url` + `guidelines_url` 입력 시 다운로드.
   많은 저널이 로그인/동적 페이지라 URL 확인 필요 — 안 되면 수동 다운로드 후 경로 지정.
 
-## ❌ 외부 사양 확인이 필요 (현재 스텁)
+## ✅ FigureLabs 연동 (공식 사양 조사 완료 — 키만 입력하면 동작)
 
-- **figurelabs 연동** (`integrations/figurelabs.py`): figurelabs 의 공개 REST API 나
-  MCP 제공 여부, 인증 방식을 확인하지 못했습니다. 계정(pmk601313@knu.ac.kr)만으로는
-  프로그램 연동이 안 되고, **API 키 + 엔드포인트 문서**가 필요합니다.
-  - 확인해 주실 것: ① figurelabs 가 API/MCP 를 제공하는지 ② 키 발급 위치
-  - 그때까지는 **R(ggplot2) 로컬 생성 figure** 를 사용하시면 됩니다(논문 품질 충분).
+`integrations/figurelabs.py` 가 실제 클라이언트로 구현됐습니다. 공식 사양:
+
+| 항목 | 값 |
+|------|------|
+| REST API (v1) | `https://api.figurelabs.ai/v1` |
+| 인증 | 헤더 `Authorization: Bearer <API_KEY>` (키 형식 `fl_live_...`) |
+| 생성 요청 | `POST /images/generations` — body `{"prompt": "...", "mode": "generations", "style": "Flat"}` → HTTP 202 + `task_id` |
+| 상태 확인 | `GET /tasks/{task_id}` polling — pending/processing/succeeded/failed/rejected/canceled, 성공 시 `output_url` 반환 |
+| MCP 연동 | `https://api.figurelabs.ai/plot-mcp` — Claude Code/Desktop MCP 설정에 등록하면 계정 로그인으로 사용 |
+
+- 키 설정: 환경변수 `FIGURELABS_API_KEY` 또는 `config.yaml` 의 `figurelabs.api_key`
+  (환경변수 우선). `base_url` 기본값은 `https://api.figurelabs.ai/v1`.
+- `FigurelabsClient.create_figure(prompt, style="Flat", poll_interval=3.0, timeout=120.0)`:
+  생성 → task_id 수신 → polling(3초 간격, 120초 타임아웃) → 성공 시 `output_url` 반환.
+  키 미설정 시 R(ggplot2) 로컬 figure 권장 안내와 함께 친절한 오류 반환.
+- `download_figure(output_url, save_path)`: 완성된 이미지를 로컬 파일로 저장.
+- `upload_figure`: REST v1 은 생성 전용(업로드 엔드포인트 없음) — 기존 시그니처 유지,
+  로컬 경로를 그대로 안내. 로컬 R figure 를 원고에 그대로 쓰면 됩니다.
+- R(ggplot2) 로컬 생성이 계속 기본 엔진입니다. FigureLabs 는 삽화/스키매틱 보조용.
+
+## ✅ Results 캐시 자동 매칭 (완료)
+
+`manuscript/sections.py` 의 `pair_figure_stats()` 가 `figures.json` 과 `stats_all.json` 을
+**value(측정 변수명) + group 컬럼** 기준으로 자동 짝짓고, `rpaper write results` 가 그 결과를
+그대로 사용합니다.
+
+- LLM 있음: Figure N [변수명] 별로 도표 설명 + 대응 통계(검정 방법, 검정통계량, p값, 그룹별 평균)를
+  짝지어 서술하도록 프롬프트 정교화.
+- LLM 없음(폴백): 단순 나열 대신 Figure마다 마크다운 이미지(`![Figure N](...)`) + 매핑된 통계
+  검정 결과(모수/비모수, 통계량, p값, 유의성 판정, 그룹별 평균)가 매핑된 마크다운 골격 출력.
+- 도표만 있거나 통계만 있는 항목도 놓치지 않고 별도 블록으로 포함.
 
 ## 🔌 MCP / API 키 연동 권고 (유료 계정 활용)
 
@@ -77,7 +103,7 @@
 ## 다음 우선순위
 
 1. `config.yaml` 에 NCBI/SerpAPI/NewsAPI/Anthropic 키 입력 후 본인 환경에서 `rpaper collect` 검증
-2. figurelabs API 문서/키 확보 → `figurelabs.py` 의 `create_figure`/`upload_figure` 구현
+2. figurelabs API 키 발급 → `FIGURELABS_API_KEY` 또는 config.yaml 입력 (구현·문서는 완료, 키만 있으면 동작)
 3. R 설치 후 `analyze`/`figure` 정확값 검증
 4. 자주 쓰는 저널의 template/guideline URL 수집 → `journal` 자동화 강화
-5. Results 작성 시 analyze/figure 결과를 자동으로 받아오도록 캐시 연결 (현재 일부 수동)
+5. ~~Results 작성 시 analyze/figure 결과를 자동으로 받아오도록 캐시 연결~~ → **완료** (`pair_figure_stats` 자동 매칭)

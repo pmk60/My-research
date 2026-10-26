@@ -151,9 +151,7 @@ def cmd_figure(cfg: Config, args) -> None:
                               rscript_path=cfg.get("analysis", "rscript_path", default="Rscript"))
     print(json.dumps(res, ensure_ascii=False, indent=2))
     if cfg.get("figurelabs", "enabled", default=False):
-        fl = FigurelabsClient(account=cfg.get("figurelabs", "account", default=""),
-                              api_key=cfg.get("figurelabs", "api_key", default=""),
-                              base_url=cfg.get("figurelabs", "base_url", default=""))
+        fl = FigurelabsClient.from_config(cfg)
         print("[figurelabs]", fl.upload_figure(res.get("figure", ""), args.value))
 
 
@@ -177,10 +175,14 @@ def cmd_write(cfg: Config, args) -> None:
         figs = figures.load_manifest(adir)
         store = Path(adir) / "stats_all.json"
         stats_data = json.loads(store.read_text(encoding="utf-8")) if store.exists() else []
-        stats_summary = _format_stats(stats_data)
+        # figures.json <-> stats_all.json 캐시를 value/group 기준으로 자동 매칭
+        pairs = sections.pair_figure_stats(figs, stats_data)
+        n_paired = sum(1 for p in pairs if p["figure"] and p["stats"])
         if not figs and not stats_data:
             print("[write] 참고: analyze/figure 산출물이 없습니다. 먼저 실행하면 Results 가 풍부해집니다.")
-        out = sections.write_results(title, figs, stats_summary, api_key=api, model=model)
+        elif n_paired:
+            print(f"[write] 캐시 매칭: figure {len(figs)}건 중 {n_paired}건을 통계 결과와 짝지었습니다.")
+        out = sections.write_results(title, pairs, api_key=api, model=model)
         vault.write_section("Results", out)
     elif args.section == "discussion":
         results_path = vault.root / "Manuscript" / "Results.md"
@@ -199,6 +201,7 @@ def cmd_write(cfg: Config, args) -> None:
 
 
 def _format_stats(stats_data: list[dict]) -> str:
+    """간단 요약(로그/상태 표시용). Results 본문은 sections.write_results 가 캐시를 직접 매칭."""
     lines = []
     for s in stats_data:
         if s.get("error"):

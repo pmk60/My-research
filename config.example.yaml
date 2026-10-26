@@ -47,13 +47,17 @@ analysis:
   rscript_path: "Rscript"
   alpha: 0.05
 
-# figurelabs 는 보조 옵션이며 기본 비활성. R 로 만든 figure 를 외부 업로드할 때만 사용.
-# 기본 figure 생성은 항상 R 입니다.
+# figurelabs 는 보조 옵션이며 기본 비활성. R 로 그리기 어려운 삽화/스키매틱 등을
+# 보조 생성할 때만 사용. 기본 figure 생성은 항상 R(ggplot2) 입니다.
 figurelabs:
-  enabled: false        # 기본 꺼짐. API 사양 확인 후에만 활성화
+  enabled: false        # API 키 입력 후에만 활성화
   account: "pmk601313@knu.ac.kr"
+  # API 키 (형식: fl_live_...). 환경변수 FIGURELABS_API_KEY 로도 설정 가능(환경변수 우선).
   api_key: ""
-  base_url: ""          # figurelabs 가 REST API 를 제공할 경우 입력
+  # FigureLabs REST API v1 기본값. 특별한 경우가 아니면 수정 불필요.
+  base_url: "https://api.figurelabs.ai/v1"
+  # 참고(MCP): Claude Code / Claude Desktop 에서 계정 로그인으로 쓰려면
+  # MCP 서버 https://api.figurelabs.ai/plot-mcp 를 MCP 설정에 등록하세요.
 
 # --- 저널 원고 ---
 journal:
